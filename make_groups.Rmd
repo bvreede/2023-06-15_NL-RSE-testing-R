@@ -1,0 +1,157 @@
+---
+title: "Testing in R"
+output: html_document
+date: "2023-06-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Mystery Coffee
+
+```{r}
+make_groups <- function(names){
+  names_shuffled <- sample(names)
+  names_coupled <- matrix(names_shuffled, ncol = 2)
+  return(names_coupled)
+}
+```
+
+
+Get some names:
+```{r}
+friends <- sample(starwarsdb::people$name, 20)
+
+friends
+```
+Group them:
+```{r}
+make_groups(friends)
+```
+
+## What do you look for?
+
+
+
+## Let's make this explicit: we will write a test
+
+```{r}
+# install.packages("testthat")
+library(testthat)
+```
+
+```{r}
+friends <- c("Jar Jar Binks","Han Solo", "Boba Fett", "Anakin Skywalker", "Leia Organa", "C-3PO")
+
+grouped_friends <- make_groups(friends)
+
+# test with testthat functions
+expect_equal(dim(grouped_friends), c(3, 2))
+expect_equal(class(grouped_friends), c("matrix", "array"))
+
+# any other ideas?
+```
+
+
+## Let's update our function
+
+How does it deal with an uneven number of participants?
+
+```{r}
+friends <- sample(starwarsdb::people$name, 5)
+make_groups(friends)
+```
+
+We don't want people to have a double duty. So let's fix this.
+
+```{r}
+
+make_groups <- function(names){
+  # Shuffle names, and remove one if there is an uneven number
+  if(length(names)%%2 > 0){
+    names_shuffled <- sample(names, length(names)-1)
+    message("Removed one person due to an uneven number of participants.")
+  } else{
+    names_shuffled <- sample(names)
+  }
+
+  # Arrange the  names
+  names_coupled <- matrix(names_shuffled, ncol = 2)
+
+  return(names_coupled)
+}
+
+```
+
+
+## Add tests
+
+What tests can we run?
+
+```{r}
+friends <- c("Jar Jar Binks","Han Solo", "Boba Fett", "Anakin Skywalker", "Leia Organa")
+
+grouped_friends <- make_groups(friends)
+
+expect_equal(dim(grouped_friends), c(2, 2))
+
+
+
+
+
+
+
+
+expect_no_warning(
+  grouped_friends <- make_groups(friends)
+  )
+```
+
+## Test-driven development
+
+First the test, then the code:
+
+```{r}
+# data frames are not able to run:
+df <- data.frame(1:10, 11:20)
+
+expect_error(make_groups(df))
+```
+
+
+Now we update the code such that the test passes:
+
+```{r}
+
+make_groups <- function(names){
+  if(!class(names) %in% c("character","integer")){
+    stop("Input must be a vector.")
+  }
+
+  # Shuffle names, and remove one if there is an uneven number
+  if(length(names)%%2 > 0){
+    names_shuffled <- sample(names, length(names)-1)
+    message("Removed one person due to an uneven number of participants.")
+  } else{
+    names_shuffled <- sample(names)
+  }
+
+  # Arrange the  names
+  names_coupled <- matrix(names_shuffled, ncol = 2)
+
+  return(names_coupled)
+}
+
+```
+
+The test again:
+
+```{r}
+# data frames are not able to run:
+df <- data.frame(1:10, 11:20)
+
+expect_error(make_groups(df), "Input must be a vector")
+```
+
+
